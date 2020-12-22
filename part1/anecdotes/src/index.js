@@ -3,19 +3,39 @@ import ReactDOM from 'react-dom'
 
 const App = (props) => {
   const [selected, setSelected] = useState(0)
+  // let [votes, setVote] = useState([0, 0, 0, 0, 0])
+  let [votes, setVote] = useState({
+    anecdotes: [0, 0, 0, 0, 0, 0]
+  });
+  const indexOfMaxValue = votes.anecdotes.indexOf(Math.max(...votes.anecdotes));
 
   return (
     <div>
-      {props.anecdotes[selected]}
+      <h1>Anecdote of the day</h1>
+      <p> {props.anecdotes[selected]} <br /> has {votes.anecdotes[selected]} votes. </p>
+
+      <Button title={"vote"} handleClick={() => {
+
+        const newVotes = votes.anecdotes.slice() //copy the array
+        newVotes[selected]++ //execute the manipulations
+        setVote({ anecdotes: newVotes }) //set the new state
+
+      }} />
 
       <Button title={"next anecdote"} handleClick={() => incrementValue(selected, setSelected)} />
 
+      <h1>Anecdote with most votes</h1>
+
+      <AnecdoteWithMost anecdoteText={anecdotes[indexOfMaxValue]} anecdoteVote={votes.anecdotes[indexOfMaxValue]} />
     </div>
   )
 }
 const incrementValue = (newValue, eventHandler) => {
-  const randomInt = () => {Math.floor((Math.random() * 5) + 0)}
-  eventHandler(newValue + 1)
+  if (newValue === anecdotes.length - 1) {
+    eventHandler(0)
+  } else {
+    eventHandler(newValue + 1)
+  }
 };
 
 const Button = (props) => {
@@ -23,6 +43,12 @@ const Button = (props) => {
     <div>
       <button onClick={props.handleClick}>{props.title}</button>
     </div>
+  )
+}
+
+const AnecdoteWithMost = (props) => {
+  return(
+  <p>{props.anecdoteText} <br /> has {props.anecdoteVote} votes.</p>
   )
 }
 
