@@ -1,47 +1,52 @@
 import React, { useState, useEffect } from 'react'
-import AddPerson from './components/AddPerson';
+import OneCountryDetailed from './components/OneCountryDetailed';
 import axios from 'axios'
 
 function filterByValue(array, string) { return array.filter(o => { return Object.keys(o).some(k => { if (typeof o[k] === 'string') return o[k].toLowerCase().includes(string.toLowerCase()); }); }); }
 
-
 const App = () => {
-  const [notes, setNotes] = useState([])
-  const [persons, setPersons] = useState([])
+  const [countries, setCountriesFound] = useState([])
   const [filterTerm, setNewfilterTerm] = useState('')
 
   const hook = () => {
-    console.log('effect')
+    if (!filterTerm) {
+      return
+    }
     axios
-      .get('http://localhost:3001/persons')
+      .get(`https://restcountries.eu/rest/v2/name/${filterTerm}`)
       .then(response => {
         console.log('promise fulfilled')
-        setPersons(response.data)
+        // console.log(response.data.length)
+
+        if (response.data.length > 10) {
+          console.log("Ebenezer")
+        } else {
+          setCountriesFound(response.data)
+        }
+
       })
   }
-  
-  useEffect(hook, [])
-  console.log('render', persons.length, 'persons')
+
+  useEffect(hook, [filterTerm])
+  // console.log('render', countries.length, 'countries')
 
   const handleFilterChange = (event) => {
     setNewfilterTerm(event.target.value)
-    console.log(filterByValue(persons, filterTerm))
+    console.log(filterByValue(countries, filterTerm))
+
   }
 
 
 
   return (
     <div>
-      <h2>Phonebook</h2>
       <form >
-        <div> filter shown with: <input value={filterTerm} onChange={handleFilterChange} /> </div>
+        <div> find countries <input value={filterTerm} onChange={handleFilterChange} /> </div>
       </form>
+      {/* {filterByValue(countries, filterTerm).map(country => <div key={country.cioc}>{country.name} {country.number}</div>)} */}
+      {filterByValue(countries, filterTerm).map(country => <div key={country.cioc}>{country.name} </div>)}
 
-      <h2>add a new</h2>
-      <AddPerson persons={persons} setPersons={setPersons}/>
-
-      <h2>Numbers</h2>
-      {filterByValue(persons, filterTerm).map(person => <div key={person.id}>{person.name} {person.number}</div>)}
+      <OneCountryDetailed countries={countries} />
 
     </div>
   )
