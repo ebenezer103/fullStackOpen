@@ -1,48 +1,95 @@
 import React, { useState, useEffect } from 'react'
-import AddPerson from './components/AddPerson';
 import axios from 'axios'
 //EXERCISE 2.15
 function filterByValue(array, string) { return array.filter(o => { return Object.keys(o).some(k => { if (typeof o[k] === 'string') return o[k].toLowerCase().includes(string.toLowerCase()); }); }); }
 
-
 const App = () => {
-  const [notes, setNotes] = useState([])
-  const [persons, setPersons] = useState([])
+  const [countries, setCountriesFound] = useState([])
+  const [countryWeather, setcountryWeather] = useState()
   const [filterTerm, setNewfilterTerm] = useState('')
+  const [countryDetailedBoolean, setCountryDetailedBoolean] = useState(false)
+  const [countryWeatherBoolean, setCountryWeatherBoolean] = useState(false)
+  const [globalCountry, setGlobalCountry] = useState('')
+  const api_key = process.env.REACT_APP_API_KEY
+
+  const weatherHook = () => {
+    if (globalCountry) {
+      axios
+        .get(`http://api.weatherstack.com/current?access_key=${api_key}&query=${globalCountry.name}`)
+        .then(response => {
+          setcountryWeather(response.data)
+          setCountryWeatherBoolean(true)
+        })
+    }
+  }
 
   const hook = () => {
-    console.log('effect')
+    if (!filterTerm) {
+      return
+    }
     axios
-      .get('http://localhost:3001/persons')
+      .get(`https://restcountries.eu/rest/v2/name/${filterTerm}`)
       .then(response => {
-        console.log('promise fulfilled')
-        setPersons(response.data)
+        // console.log('promise fulfilled')
+        // console.log(response.data.length)
+
+        if (response.data.length > 10) {
+          console.log("Ebenezer")
+        } else {
+          setCountriesFound(response.data)
+        }
+
       })
   }
-  
-  useEffect(hook, [])
-  console.log('render', persons.length, 'persons')
+
+  useEffect(hook, [filterTerm])
+  useEffect(weatherHook, [globalCountry])
+  // console.log('render', countries.length, 'countries')
 
   const handleFilterChange = (event) => {
     setNewfilterTerm(event.target.value)
-    console.log(filterByValue(persons, filterTerm))
+    // console.log(filterByValue(countries, filterTerm))
+
   }
 
+  const showDetails = (country) => {
+    setCountryDetailedBoolean(true);
+    setGlobalCountry(country)
+  }
+
+  const CountryDetailed = (country) => {
+    return (
+      <div style={{ display: countryDetailedBoolean ? "block" : "none" }} >
+        <h1> {globalCountry.name} </h1>
+        <p>capital: {globalCountry.capital} </p>
+        <p>population: {globalCountry.population} </p>
+        <h3> languages </h3>
+        {globalCountry && globalCountry.languages.map((language) => <li key={language.iso639_2} > {language.name} </li>)}
+        <img src={globalCountry.flag} width="200" height="200" alt="" />
+      </div >
+    )
+  }
+
+  const CountryWeatherDetailed = (country) => {
+    return (
+      <div style={{ display: countryWeatherBoolean ? "block" : "none" }} >
+        <h2> Weather in {countryWeather && countryWeather.location.name}</h2>
+        <h4> temperature: {countryWeather && countryWeather.current.temperature} </h4>
+        <img />
+        <h4> wind: {countryWeather && countryWeather.current.wind_speed} mph direction {countryWeather && countryWeather.current.wind_dir} </h4>
+      </div >
+    )
+  }
 
 
   return (
     <div>
-      <h2>Phonebook</h2>
       <form >
-        <div> filter shown with: <input value={filterTerm} onChange={handleFilterChange} /> </div>
+        <div> find countries <input value={filterTerm} onChange={handleFilterChange} /> </div>
       </form>
-
-      <h2>add a new</h2>
-      <AddPerson persons={persons} setPersons={setPersons}/>
-
-      <h2>Numbers</h2>
-      {filterByValue(persons, filterTerm).map(person => <div key={person.id}>{person.name} {person.number}</div>)}
-
+      {filterByValue(countries, filterTerm).map(country => <div key={country.cioc}> {country.name} <button onClick={() => showDetails(country)}> show </button> </div>)}
+      < CountryDetailed />
+      < CountryWeatherDetailed />
     </div>
   )
 }
