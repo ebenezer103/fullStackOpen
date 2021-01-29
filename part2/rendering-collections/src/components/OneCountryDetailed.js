@@ -13,7 +13,7 @@ const OneCountryDetailed = (props) => {
                 <h3> languages </h3>
                 {props.countries[0].languages.map((language) => <li key={language.iso639_2} > {language.name} </li>)}
 
-                <img src={props.countries[0].flag} width="200" height="200"/>
+                <img src={props.countries[0].flag} width="200" height="200" alt=""/>
             </div>
         )
     } else {
