@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import backendServices from './services/backend';
 
-
 const AddPersonFunctionality = (props) => {
 
   const [newName, setNewName] = useState('')
@@ -21,6 +20,10 @@ const AddPersonFunctionality = (props) => {
       .then(response => {
         props.setEditedPerson(`${user.name} + ${newNumber}`)
         console.log(response)
+        props.setMessage(`${user.name} number was changed!`)
+        setTimeout(() => {
+          props.setMessage(null)
+        }, 5000)
       })
     }
 
@@ -41,6 +44,10 @@ const AddPersonFunctionality = (props) => {
     backendServices.addPersonServerCall(newObject)
       .then(response => {
         console.log(response)
+        props.setMessage(`${newObject.name} was added to the phonebook!`)
+        setTimeout(() => {
+          props.setMessage(null)
+        }, 5000)
       })
 
 
