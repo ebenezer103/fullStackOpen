@@ -28,7 +28,11 @@ const App = () => {
       return
     }
     axios
+<<<<<<< HEAD
       .get(`https://restcountries.eu/rest/v2/name/${filterTerm}`)
+=======
+      .get('http://localhost:3001/persons')
+>>>>>>> parent of 5c210e4f (Before deployment to internet (3.10))
       .then(response => {
         // console.log('promise fulfilled')
         // console.log(response.data.length)
