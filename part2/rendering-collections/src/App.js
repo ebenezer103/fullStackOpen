@@ -1,95 +1,81 @@
 import React, { useState, useEffect } from 'react'
+import AddPersonFunctionality from './components/AddPersonFunctionality';
 import axios from 'axios'
+import backendServices from './components/services/backend';
+import Notification from './components/Notification';
 
 function filterByValue(array, string) { return array.filter(o => { return Object.keys(o).some(k => { if (typeof o[k] === 'string') return o[k].toLowerCase().includes(string.toLowerCase()); }); }); }
+//EXERCISE 2.15
 
 const App = () => {
-  const [countries, setCountriesFound] = useState([])
-  const [countryWeather, setcountryWeather] = useState()
+  // const [notes, setNotes] = useState([])
+  const [persons, setPersons] = useState([])
   const [filterTerm, setNewfilterTerm] = useState('')
-  const [countryDetailedBoolean, setCountryDetailedBoolean] = useState(false)
-  const [countryWeatherBoolean, setCountryWeatherBoolean] = useState(false)
-  const [globalCountry, setGlobalCountry] = useState('')
-  const api_key = process.env.REACT_APP_API_KEY
+  const [deletedPerson, setDeletedPerson] = useState([])
+  const [editedPerson, setEditedPerson] = useState('')
+  const [message, setMessage] = useState(null)
+  const [error, setError] = useState(false)
 
-  const weatherHook = () => {
-    if (globalCountry) {
-      axios
-        .get(`http://api.weatherstack.com/current?access_key=${api_key}&query=${globalCountry.name}`)
+  const hook = () => {
+    console.log('effect')
+    axios
+      .get('http://localhost:3001/api/persons')
+      .then(response => {
+        console.log('promise fulfilled')
+        setPersons(response.data)
+      })
+  }
+
+  useEffect(hook, [deletedPerson, editedPerson])
+  console.log('render', persons.length, 'persons')
+
+  const handleFilterChange = (event) => {
+    setNewfilterTerm(event.target.value)
+    console.log(filterByValue(persons, filterTerm))
+  }
+
+  const deleteUser = (id, name) => {
+    if (window.confirm(`Delete ${name}?`)) {
+      backendServices.
+        deletePersonServerCall(id)
         .then(response => {
-          setcountryWeather(response.data)
-          setCountryWeatherBoolean(true)
+
+          setMessage(`${name} was removed from server`)
+          setTimeout(() => {
+            setMessage(null)
+            setDeletedPerson(name)
+          }, 5000)
+
+
+        })
+        .catch(error => {
+          setError(true)
+          setDeletedPerson('deletedAlready')
+          setMessage(`${name} was already removed from server`)
+          setTimeout(() => {
+            setMessage(null)
+            setError(false)
+          }, 5000)
         })
     }
   }
 
-  const hook = () => {
-    if (!filterTerm) {
-      return
-    }
-    axios
-      .get(`https://restcountries.eu/rest/v2/name/${filterTerm}`)
-      .then(response => {
-        // console.log('promise fulfilled')
-        // console.log(response.data.length)
-
-        if (response.data.length > 10) {
-          console.log("Ebenezer")
-        } else {
-          setCountriesFound(response.data)
-        }
-
-      })
-  }
-
-  useEffect(hook, [filterTerm])
-  useEffect(weatherHook, [globalCountry])
-  // console.log('render', countries.length, 'countries')
-
-  const handleFilterChange = (event) => {
-    setNewfilterTerm(event.target.value)
-    // console.log(filterByValue(countries, filterTerm))
-
-  }
-
-  const showDetails = (country) => {
-    setCountryDetailedBoolean(true);
-    setGlobalCountry(country)
-  }
-
-  const CountryDetailed = (country) => {
-    return (
-      <div style={{ display: countryDetailedBoolean ? "block" : "none" }} >
-        <h1> {globalCountry.name} </h1>
-        <p>capital: {globalCountry.capital} </p>
-        <p>population: {globalCountry.population} </p>
-        <h3> languages </h3>
-        {globalCountry && globalCountry.languages.map((language) => <li key={language.iso639_2} > {language.name} </li>)}
-        <img src={globalCountry.flag} width="200" height="200" alt="" />
-      </div >
-    )
-  }
-
-  const CountryWeatherDetailed = (country) => {
-    return (
-      <div style={{ display: countryWeatherBoolean ? "block" : "none" }} >
-        <h2> Weather in {countryWeather && countryWeather.location.name}</h2>
-        <h4> temperature: {countryWeather && countryWeather.current.temperature} </h4>
-        <img />
-        <h4> wind: {countryWeather && countryWeather.current.wind_speed} mph direction {countryWeather && countryWeather.current.wind_dir} </h4>
-      </div >
-    )
-  }
 
 
   return (
     <div>
+      <Notification error={error} message={message} />
+      <h2>Phonebook</h2>
       <form >
-        <div> find countries <input value={filterTerm} onChange={handleFilterChange} /> </div>
+        <div> filter shown with: <input value={filterTerm} onChange={handleFilterChange} /> </div>
       </form>
-      {filterByValue(countries, filterTerm).map(country => <div key={country.cioc}> {country.name} <button onClick={() => showDetails(country)}> show </button> </div>)}
-      < CountryDetailed />
-      < CountryWeatherDetailed />
+
+      <h2>add a new</h2>
+      <AddPersonFunctionality setMessage={setMessage} persons={persons} setPersons={setPersons} editedPerson={editedPerson} setEditedPerson={setEditedPerson} />
+
+      <h2>Numbers</h2>
+      {filterByValue(persons, filterTerm).map(person => <div key={person.id}>{person.name} {person.number} <button type="button" onClick={() => { deleteUser(person.id, person.name) }}>delete</button>  </div>)}
+
     </div>
   )
 }
